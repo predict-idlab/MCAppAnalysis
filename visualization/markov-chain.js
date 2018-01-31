@@ -18,7 +18,7 @@ jQuery.expr[':'].regex = function(elem, index, match) {
 $(function() {
     
     // Read our data
-    d3.json("visualization_data.json", function(error, data) {
+    d3.json("mc_cluster1.json", function(error, data) {
 
         var name_to_node = {}
         for(node in data.nodes){

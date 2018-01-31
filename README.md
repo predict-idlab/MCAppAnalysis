@@ -16,3 +16,7 @@ After running all cells in `create_markov_chain.ipynb`, just open the markov_cha
 ## Sequence clustering
 
 Please take a look at [this notebook](https://github.com/IBCNServices/MCAppAnalysis/blob/master/notebooks/sequence_clustering.ipynb)
+
+## Contact
+
+If you have any problems with running this code, please create an issue so we can help you out. You can always contact me at gilles.vandewiele (at) ugent (dot) be if needed.
