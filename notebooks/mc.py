@@ -85,38 +85,3 @@ class MarkovChain(object):
         # Serialize
         with open(output_path, 'w+') as ofp:
             json.dump(data, ofp)
-
-
-
-
-
-
-
-
-"""
-{
-  "nodes": [
-    {
-      "metrics": {
-        "page_views": 0.0762522814844859,
-        "page_rank": 0.1182832058513775
-      },
-      "x": 100,
-      "color": "#a6cee3",
-      "enabled": true,
-      "id": "route",
-      "y": 60,
-      "timeOnPage": 19.91299388379205
-    },
-    ...
-  ],
-  "edges": [
-    {
-      "target": "route",
-      "source": "route",
-      "prob": 0.0
-    },
-    ...
-  ]
-}
-"""
