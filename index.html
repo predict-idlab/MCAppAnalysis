@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+	<!-- CSS Files -->
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="css/bootstrap.min.css"/>
+	<!-- IcoMoon icons -->
+    <link rel="stylesheet" href="css/icons.css"></head>
+
+	<!-- JS Files -->
+	<!-- jQuery -->
+	<script src="js/jquery.min.js"></script>
+	<!-- Bootstrap -->
+	<script src="js/bootstrap.min.js"></script>
+    <!-- D3 -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+</head>
+
+<body>
+
+<style>
+.current-node {
+    stroke: #1abc9c;
+    stroke-width: 5px;
+}
+</style>
+
+<div class="container">
+	<div class="panel panel-default" style='height: 100%'>
+		<div class="panel-heading">
+			<p style='display: inline-block;'>Markov Chain Application Analysis</p>
+			<span style='font-size:20px; font-weight: bold; display: inline-block; float: right; margin-top: 5px; cursor: pointer;' class="glyphicon glyphicon-question-sign" id='btnHelp' data-toggle="modal" data-target="#helpModal"> </span>
+		</div>
+		<div class="panel-body">
+
+			<div class="row display-flex" id='uploadFilePanel'>
+				<div class='col-xs-12 col-sm-12 col-md-12 col-lg-12'>
+					<input type="file" id="files" name="files[]" style='margin: 0 auto'/>
+				</div>
+			</div>
+
+			<div class="row display-flex" id='mainPanel' style='display: none'>
+				<div class='col-xs-12 col-sm-12 col-md-12 col-lg-12'>
+					<div class="text-center" style='margin-top: 10px;'>
+						
+						<!--<div class="btn-group" id='mapControls' data-toggle="buttons" style='width: 15%;'>
+							  <label class="btn btn-primary active" style='width: 50%;' id="btnVisualization">
+							    <input type="radio" name="options" value='start'> <span style='font-size:25px; font-weight: bold; vertical-align: middle;' class="icon-uni41"> </span>
+							  </label>
+							  <label class="btn btn-primary" style='width: 50%;' id="btnClustering">
+							    <input type="radio" name="options" value='end'> <span style='font-size:25px; font-weight: bold; vertical-align: middle;' class="icon-uni42"> </span>
+							  </label>
+						</div>-->
+						<ul class="nav nav-tabs nav-justified">
+						  <li class="active"><a data-toggle="tab" href="#visualization">Markov Chain Visualization</a></li>
+						  <li id='clusteringTab'><a data-toggle="tab" href="#clustering">User Session Clustering</a></li>
+						</ul>
+
+						<div class="tab-content">
+  						<div id="visualization" class="tab-pane fade in active">
+							<div style='height: 600px; margin-top: 10px;' id='markovChainVisualization'>
+
+								<div class='col-xs-8 col-sm-8 col-md-8 col-lg-8' id='mcColumn'>
+									<svg id="markovChain" height="600" style='float: left; display: inline-block;'>
+										<defs>
+										    <marker
+										      id="arrow"
+										      markerUnits="strokeWidth"
+										      markerWidth="2"
+										      markerHeight="2"
+										      viewBox="0 -5 10 10"
+										      refX="0"
+										      refY="0"
+										      orient="auto">
+										      <path d="M0,-5L10,0L0,5"></path>
+										    </marker>
+									    </defs>				
+									</svg>
+								</div>
+
+								<div class='col-xs-4 col-sm-4 col-md-4 col-lg-4'>
+							        <div id='controlPanelMarkovChain' style='display: inline-block;'>
+							        	<h3>Visualization controls</h3>
+							            <p style='display: inline-block;'>Minimum probability:</p>
+							            <p style='display: inline-block;'><span id="minimumProbabilityValue">0.1</span></p>
+							            <input id="minimumProbabilitySlider" type="range" min="0" max="1.01" step="0.01" value="0.1"/>
+							            <script>
+							                document.getElementById('minimumProbabilityValue').innerHTML = document.getElementById('minimumProbabilitySlider').value
+							            </script>
+							            <hr/>
+							            <div id='checkboxes'> </div>
+							            <hr style="border-bottom: 4px double #eee;"/>
+							            <div id='simulationControls'>
+								        	<h3>Simulation</h3>
+								        	<div class="btn-group" data-toggle="buttons" style='width: 50%;'>
+												  <label class="btn btn-success" style='width: 50%;' id="btnStartSimulation">
+												    <input type="radio" name="options" value='start'> <span style='font-weight: bold;' class="glyphicon glyphicon-play"> </span>
+												  </label>
+												  <label class="btn btn-danger active" style='width: 50%;' id="btnPauseSimulation">
+												    <input type="radio" name="options" value='end'> <span style='font-weight: bold;' class="glyphicon glyphicon-pause"> </span>
+												  </label>
+											</div>
+											<div class='text-center'>
+												<svg id="simulatedSequence" height="50" style='display: block; margin: 0 auto; margin-top: 15px;'> </svg>
+											</div>
+										</div>
+							        </div>
+							    </div>
+
+							</div>
+						</div>
+  						<div id="clustering" class="tab-pane fade">
+
+							<div style='height: 600px; margin-top: 10px;' id='sequenceClustering'>
+								<div class='col-xs-8 col-sm-8 col-md-8 col-lg-8' id='clusteringColumn'>
+									<div id='clusteringVisualization' style='display: inline-block;'>
+										<svg id="sequenceClusteringVisualization" height="600" style='float: left; display: inline-block;'> </svg>
+									</div>
+								</div>
+								<div class='col-xs-4 col-sm-4 col-md-4 col-lg-4'>
+							        <div id='controlPanelClustering' style='display: inline-block;'>
+							            <p style='display: inline-block;'>Nr. Clusters:</p>
+							            <p style='display: inline-block;'><span id="nrClustersValue">1</span></p>
+							            <input id="nrClustersSlider" type="range" min="1" step="1" value="1"/>
+							            <div class="text-center" style='margin-top: 10px;'>
+								            <label class="btn btn-success" style='width: 50%;' id="btnCluster">
+										    	<span style='font-weight: bold; vertical-align: middle;' class="glyphicon glyphicon-play"> </span>
+										  	</label>
+										</div>
+							        </div>
+							    </div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<hr>
+	<div style='margin-left: 10px; font-size: 12px;'>
+		<p> Made by <a href="http://users.ugent.be/~givdwiel/">Gilles Vandewiele</a> (<a href="http://idlab.technology/">IDLab</a>) in collaboration with <a href="https://www.ugent.be/ps/communicatiewetenschappen/mict/en/team/senior_researchers/jeroen-stragier.htm">Jeroen Stragier</a> (<a href="https://www.ugent.be/ps/communicatiewetenschappen/mict/en">MICT</a>). Both are from <a href="https://www.ugent.be">Universiteit Gent</a> -- <a href="https://www.imec-int.com/en/home">imec</a>.</p>
+	</div>
+</div>
+
+<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" style='display: inline-block;'>Help</h2>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      	<h3>Upload data</h3>
+        <p>
+        	The uploaded file has to be Comma-Separated Values (CSV) and <strong>must contain one of the sets of columns</strong> listed below. Moreover, these <strong>column names should be present on the first line</strong> in the CSV-file, in the same order.
+        	<ul>
+        		<li><code>from,to</code>: the most simple format which just lists the different transitions. With this format, sequence clustering and user action simulations are not possible, since there is no notion of sessions.</li>
+        		<li><code>from,to,session_id,timestamp</code>: The simple format, extended with a identifier for each user session and a time when the action was made. A session is defined as all the actions a user made from opening the application until closing it. This allows us to introduce a start- and exit- state in the markov chain. Moreover, sequence clustering and simulations of user actions are also possible.</li>
+        		<li><code>from,to,user_id,timestamp</code>: When this format is used, we heuristically determine the session_ids by looking at the difference in timestamps of two consecutive actions, made by a user.</li>
+        	</ul>
+        </p>
+      	<h3>Markov Chain Visualization</h3>
+      	<h3>User Session Clustering</h3>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+	
+<!-- User controls -->
+<script src="js/controls.js"></script>
+
+</body>
+</html>
