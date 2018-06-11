@@ -36,6 +36,15 @@ function arraysEqual(arr1, arr2) {
 function clusterSessions(sessions, states, nrClusters){
   if(nrClusters == 1) return [sessions];
 
+  for(var i = 0; i < sessions.length; i++){
+    //sessions[i] = sessions[i].slice(1, sessions[i].length - 1);
+    //sessions[i] = sessions[i].slice(0, sessions[i].length - 1);
+    if(sessions[i].length < 4) {
+      sessions.slice(i, 1);
+    }
+  }
+  console.log(sessions);
+
   var assignment     = [],
       prevAssignment = [],
       markovChains   = [],
@@ -43,7 +52,7 @@ function clusterSessions(sessions, states, nrClusters){
 
   // Create a markov chain object for each cluster
   for(var c = 0; c < nrClusters; c++){
-    markovChains[c] = new MarkovChain(states);
+    markovChains.push(new MarkovChain(states));
   }
 
   // Assign each session to random cluster as initialization
@@ -55,7 +64,6 @@ function clusterSessions(sessions, states, nrClusters){
 
   // Iterate until convergence (no change)
   while(!arraysEqual(assignment, prevAssignment)){
-    console.log(assignment);
     // TODO: make 100 a user-setting
     // Limit total number of iterations to avoid infinite loop
     if(iterations == 100){
@@ -64,17 +72,18 @@ function clusterSessions(sessions, states, nrClusters){
     }
 
     // Assign each session to the markov chain with maximum likelihood
-    prevAssignment = assignment;
-    assignment = [];
+    prevAssignment = jQuery.extend(true, [], assignment);
+    var assignment = [];
 
     for(var i = 0; i < sessions.length; i++){
-      var maxProb     = 0,
-          bestCluster = null;
+      var maxProb     = -99999,
+          bestCluster = null,
+          prob        = null;
 
       for(var c = 0; c < nrClusters; c++){
-        var prob = markovChains[c].get_probability(sessions[i]);
+        prob = markovChains[c].get_probability(sessions[i]);
         if(prob > maxProb){
-          max_prob = prob;
+          maxProb = prob;
           bestCluster = c;
         }
       }
@@ -83,8 +92,9 @@ function clusterSessions(sessions, states, nrClusters){
     }
 
     // Re-calculate markov chains
+    markovChains = [];
     for(var c = 0; c < nrClusters; c++){
-      markovChains[c] = new MarkovChain(states);
+      markovChains.push(new MarkovChain(states));
     }
 
     for(var i = 0; i < sessions.length; i++){
@@ -100,7 +110,7 @@ function clusterSessions(sessions, states, nrClusters){
     clusters.push([]);
   }
   for(var i = 0; i < sessions.length; i++){
-    clusters[assignment[i]].push(sessions[i]);
+    clusters[assignment[i]].push(['start'].concat(sessions[i].concat(['exit'])));
   }
 
   return clusters;
@@ -620,6 +630,103 @@ function CSVToArray( strData, strDelimiter ){
     return( arrData );
 }
 
+var visualizeData = function(theFile) {
+  return function(e) {
+    data = CSVToArray(e.target.result, ',');
+
+    if(data[0].length != 2 && data[0].length != 4){
+      alert('The uploaded file should contain either two or four columns!');
+      return;
+    }
+    else if(data[0].length == 2){
+      $('#clusteringTab').remove();
+      if(!arraysEqual(data[0], ['from', 'to'])){
+        alert('If you upload a file with two columns, these must be from & to!');
+        return;
+      }
+    } else if(data[0].length == 4){
+      if(!arraysEqual(data[0], ['from', 'to', 'session_id', 'timestamp'])){
+        alert('If you upload a file with four columns, these must be from, to, session_id and timestamp!');
+        return;
+      }
+    }
+
+    $('#mainPanel').show();
+    $('#uploadFilePanel').hide();
+
+    states = getStates(data);
+    var mc = new MarkovChain(states);
+    sessions = createSessions(data);
+    for(var j = 0; j < sessions.length; j++){
+      mc.add_session(sessions[j]);
+    }
+
+    console.log(sessions);
+
+    document.getElementById("nrClustersSlider").max = Math.min(10, sessions.length);
+
+    cmap = createColorMap(mc);
+
+    createMarkovChain(mc, cmap);
+
+    var cluster1 = [];
+    var cluster2 = [];
+    for(var i = 0; i < sessions.length - 1; i++){
+      cluster1.push(sessions[i])
+    }
+    for(var i = sessions.length - 1; i < sessions.length; i++){
+      cluster2.push(sessions[i])
+    }
+    createSequenceMatrix([sessions], cmap, "#sequenceClusteringVisualization");
+
+    var simulateThread = null;
+
+    // Keep calling simulate with a new timeout variable
+    var simulatedSession = []
+    function simulate(){
+        simulateThread = window.setTimeout(function(){
+            simulatedSession.push(mc.state);
+            $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
+            var prevState = mc.state;
+            mc.transition();
+            $('#circle_' + mc.states[mc.state_to_id[mc.state]]).addClass('current-node');
+            simulate();
+            if(mc.state == "exit") {
+              clearInterval(simulateThread);
+              simulateThread = null;
+              $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
+              simulatedSession.push("exit");
+              createSequenceMatrix([[simulatedSession]], cmap, "#simulatedSequence");
+              simulatedSession = [];
+            }
+        }, 1000);
+    }
+
+    $('#btnStartSimulation').click(function () {
+      if(simulateThread == null){
+        mc.state = "start";
+        $('#circle_' + mc.states[mc.state_to_id[mc.state]]).addClass('current-node');
+        simulate();
+      }
+    });
+
+    $('#btnPauseSimulation').click(function () {
+      if(simulateThread != null) {
+        clearInterval(simulateThread); 
+        simulateThread = null;
+      }
+      $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
+    });
+
+    $('#btnCluster').click(function () {
+      var nrClusters = $('#nrClustersSlider').val();
+      d3.selectAll("#sequenceClusteringVisualization > *").remove();
+      createSequenceMatrix(clusterSessions(sessions, states, nrClusters), cmap, "#sequenceClusteringVisualization");
+    });
+
+  };
+};
+
 // File parsing
 function handleFileSelect(evt) {
   // Source: https://www.html5rocks.com/en/tutorials/file/dndfiles/
@@ -632,102 +739,7 @@ function handleFileSelect(evt) {
 
       var reader = new FileReader();
       
-      reader.onload = (function(theFile) {
-        return function(e) {
-          data = CSVToArray(e.target.result, ',');
-
-          if(data[0].length != 2 && data[0].length != 4){
-            alert('The uploaded file should contain either two or four columns!');
-            return;
-          }
-          else if(data[0].length == 2){
-            $('#clusteringTab').remove();
-            if(!arraysEqual(data[0], ['from', 'to'])){
-              alert('If you upload a file with two columns, these must be from & to!');
-              return;
-            }
-          } else if(data[0].length == 4){
-            if(!arraysEqual(data[0], ['from', 'to', 'session_id', 'timestamp'])){
-              alert('If you upload a file with four columns, these must be from, to, session_id and timestamp!');
-              return;
-            }
-          }
-
-          $('#mainPanel').show();
-          $('#uploadFilePanel').hide();
-
-          states = getStates(data);
-          var mc = new MarkovChain(states);
-          sessions = createSessions(data);
-          for(var j = 0; j < sessions.length; j++){
-            mc.add_session(sessions[j]);
-          }
-
-          console.log(sessions);
-
-          document.getElementById("nrClustersSlider").max = Math.min(10, sessions.length);
-
-          cmap = createColorMap(mc);
-
-          createMarkovChain(mc, cmap);
-
-          var cluster1 = [];
-          var cluster2 = [];
-          for(var i = 0; i < sessions.length - 1; i++){
-            cluster1.push(sessions[i])
-          }
-          for(var i = sessions.length - 1; i < sessions.length; i++){
-            cluster2.push(sessions[i])
-          }
-          createSequenceMatrix([sessions], cmap, "#sequenceClusteringVisualization");
-
-          var simulateThread = null;
-
-          // Keep calling simulate with a new timeout variable
-          var simulatedSession = []
-          function simulate(){
-              simulateThread = window.setTimeout(function(){
-                  simulatedSession.push(mc.state);
-                  $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
-                  var prevState = mc.state;
-                  mc.transition();
-                  $('#circle_' + mc.states[mc.state_to_id[mc.state]]).addClass('current-node');
-                  simulate();
-                  if(mc.state == "exit") {
-                    clearInterval(simulateThread);
-                    simulateThread = null;
-                    $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
-                    simulatedSession.push("exit");
-                    createSequenceMatrix([[simulatedSession]], cmap, "#simulatedSequence");
-                    simulatedSession = [];
-                  }
-              }, 1000);
-          }
-
-          $('#btnStartSimulation').click(function () {
-            if(simulateThread == null){
-              mc.state = "start";
-              $('#circle_' + mc.states[mc.state_to_id[mc.state]]).addClass('current-node');
-              simulate();
-            }
-          });
-
-          $('#btnPauseSimulation').click(function () {
-            if(simulateThread != null) {
-              clearInterval(simulateThread); 
-              simulateThread = null;
-            }
-            $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
-          });
-
-          $('#btnCluster').click(function () {
-            var nrClusters = $('#nrClustersSlider').val();
-            d3.selectAll("#sequenceClusteringVisualization > *").remove();
-            createSequenceMatrix(clusterSessions(sessions, states, nrClusters), cmap, "#sequenceClusteringVisualization");
-          });
-
-        };
-      })(f);
+      reader.onload = visualizeData(f);
 
       reader.readAsText(f);
 
