@@ -35,21 +35,12 @@ function arraysEqual(arr1, arr2) {
 
 function clusterSessions(sessions, states, nrClusters){
 
-  var sessions  = sessions.slice(0).sort(sortByLength),
+  var sortedSessions  = sessions.slice(0).sort(sortByLength),
       // Discard outliers in terms of session length
-      minLength = sessions[parseInt(0.05*sessions.length)].length, 
-      maxLength = sessions[parseInt(0.95*sessions.length)].length;
+      minLength = sortedSessions[parseInt(0.05*sessions.length)].length, 
+      maxLength = sortedSessions[parseInt(0.95*sessions.length)].length;
 
-  console.log(minLength, maxLength);
-
-  for(var i = 0; i < sessions.length; i++){
-    //sessions[i].spice(0, 1);
-    //sessions[i].splice(sessions[i].length - 1, 1);
-    if(sessions[i].length >= maxLength || sessions[i].length <= minLength ) {
-      sessions.splice(i, 1);
-    }
-  }
-  console.log(sessions);
+  sessions = sessions.filter(x => x.length > minLength && x.length < maxLength);
 
   if(nrClusters == 1) return [sessions];
 
@@ -336,6 +327,9 @@ function createSequenceMatrix(sessions, cmap, svgId){
     var cellWidth = width / (sessions.length * maxLength);
   }
   var clusterWidth = width / sessions.length;
+
+  cellHeight = Math.min(cellHeight, cellWidth);
+  cellWidth = Math.min(cellHeight, cellWidth);
 
   // Create the D3 matrix
   svg.selectAll('.cell')
