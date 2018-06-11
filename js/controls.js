@@ -34,16 +34,24 @@ function arraysEqual(arr1, arr2) {
 }
 
 function clusterSessions(sessions, states, nrClusters){
-  if(nrClusters == 1) return [sessions];
+
+  var sessions  = sessions.slice(0).sort(sortByLength),
+      // Discard outliers in terms of session length
+      minLength = sessions[parseInt(0.05*sessions.length)].length, 
+      maxLength = sessions[parseInt(0.95*sessions.length)].length;
+
+  console.log(minLength, maxLength);
 
   for(var i = 0; i < sessions.length; i++){
-    //sessions[i] = sessions[i].slice(1, sessions[i].length - 1);
-    //sessions[i] = sessions[i].slice(0, sessions[i].length - 1);
-    if(sessions[i].length < 4) {
-      sessions.slice(i, 1);
+    //sessions[i].spice(0, 1);
+    //sessions[i].splice(sessions[i].length - 1, 1);
+    if(sessions[i].length >= maxLength || sessions[i].length <= minLength ) {
+      sessions.splice(i, 1);
     }
   }
   console.log(sessions);
+
+  if(nrClusters == 1) return [sessions];
 
   var assignment     = [],
       prevAssignment = [],
@@ -110,7 +118,7 @@ function clusterSessions(sessions, states, nrClusters){
     clusters.push([]);
   }
   for(var i = 0; i < sessions.length; i++){
-    clusters[assignment[i]].push(['start'].concat(sessions[i].concat(['exit'])));
+    clusters[assignment[i]].push(sessions[i]);
   }
 
   return clusters;
@@ -677,7 +685,7 @@ var visualizeData = function(theFile) {
     for(var i = sessions.length - 1; i < sessions.length; i++){
       cluster2.push(sessions[i])
     }
-    createSequenceMatrix([sessions], cmap, "#sequenceClusteringVisualization");
+    createSequenceMatrix(clusterSessions(sessions, states, 1), cmap, "#sequenceClusteringVisualization");
 
     var simulateThread = null;
 
