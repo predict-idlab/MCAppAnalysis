@@ -126,13 +126,12 @@ function sortByLength(a, b) {
 }
 
 function getStates(data){
-  states = new Set();
+  states = new Set(['start']);
   for(var i = 1; i < data.length; i++){
-    states.add(data[i][0]);
-    states.add(data[i][1]);
+    if(data[i][0] != '') states.add(data[i][0]);
+    if(data[i][1] != '') states.add(data[i][1]);
   }
   if(data[0].length > 2){
-    states.add('start');
     states.add('exit');
   }
   return Array.from(states);
@@ -153,10 +152,15 @@ function createSessions(data){
     data = data.slice(1).sort(sortByTime);
 
     for(var i = 0; i < data.length; i++){
-      if(!(data[i][2] in actions_per_session)){
-        actions_per_session[data[i][2]] = [data[i][0], data[i][1]];
+      if(data[i][1] === ''){
+        actions_per_session[data[i][2]] = [];
       } else {
-        actions_per_session[data[i][2]].push(data[i][1]);
+        if(!(data[i][2] in actions_per_session)){
+          //actions_per_session[data[i][2]] = [data[i][0], data[i][1]];
+          actions_per_session[data[i][2]] = [data[i][1]];
+        } else {
+          actions_per_session[data[i][2]].push(data[i][1]);
+        }
       }
     }
 
@@ -523,6 +527,7 @@ function createMarkovChain(markovChain, cmap){
 
   // Reposition nodes and their text
   function drag(d) {
+      //if(d3.event.x < )
       d.x = d3.event.x;
       d.y = d3.event.y;
 
@@ -631,9 +636,25 @@ function handleFileSelect(evt) {
         return function(e) {
           data = CSVToArray(e.target.result, ',');
 
-          if(data[0].length <= 2){
-            $('#clusteringTab').remove();
+          if(data[0].length != 2 && data[0].length != 4){
+            alert('The uploaded file should contain either two or four columns!');
+            return;
           }
+          else if(data[0].length == 2){
+            $('#clusteringTab').remove();
+            if(!arraysEqual(data[0], ['from', 'to'])){
+              alert('If you upload a file with two columns, these must be from & to!');
+              return;
+            }
+          } else if(data[0].length == 4){
+            if(!arraysEqual(data[0], ['from', 'to', 'session_id', 'timestamp'])){
+              alert('If you upload a file with four columns, these must be from, to, session_id and timestamp!');
+              return;
+            }
+          }
+
+          $('#mainPanel').show();
+          $('#uploadFilePanel').hide();
 
           states = getStates(data);
           var mc = new MarkovChain(states);
@@ -709,8 +730,6 @@ function handleFileSelect(evt) {
       })(f);
 
       reader.readAsText(f);
-      $('#mainPanel').show();
-      $('#uploadFilePanel').hide();
 
     }
   }

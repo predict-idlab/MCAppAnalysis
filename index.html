@@ -55,8 +55,8 @@
 							  </label>
 						</div>-->
 						<ul class="nav nav-tabs nav-justified">
-						  <li class="active"><a data-toggle="tab" href="#visualization">Markov Chain Visualization</a></li>
-						  <li id='clusteringTab'><a data-toggle="tab" href="#clustering">User Session Clustering</a></li>
+						  <li class="active"><a data-toggle="tab" href="#visualization">Markov Chain Visualization <br> <small>(drag nodes around!)</small> </a></li>
+						  <li id='clusteringTab'>User Session Clustering <br> <small>(coming soon!)</small></li> <!-- <a data-toggle="tab" inactive> .. </a> -->
 						</ul>
 
 						<div class="tab-content">
@@ -162,13 +162,45 @@
         <p>
         	The uploaded file has to be Comma-Separated Values (CSV) and <strong>must contain one of the sets of columns</strong> listed below. Moreover, these <strong>column names should be present on the first line</strong> in the CSV-file, in the same order.
         	<ul>
-        		<li><code>from,to</code>: the most simple format which just lists the different transitions. With this format, sequence clustering and user action simulations are not possible, since there is no notion of sessions.</li>
-        		<li><code>from,to,session_id,timestamp</code>: The simple format, extended with a identifier for each user session and a time when the action was made. A session is defined as all the actions a user made from opening the application until closing it. This allows us to introduce a start- and exit- state in the markov chain. Moreover, sequence clustering and simulations of user actions are also possible.</li>
-        		<li><code>from,to,user_id,timestamp</code>: When this format is used, we heuristically determine the session_ids by looking at the difference in timestamps of two consecutive actions, made by a user.</li>
+        		<li>
+        			<code>from,to</code>: 
+        			the most simple format which just lists the different transitions. With this format, sequence clustering and user action simulations are not possible, since there is no notion of sessions. An example is the following snippet:
+<pre>from,to
+A,B
+B,C
+C,D
+A,C
+B,C
+A,B</pre>
+        		</li>
+        		<li>
+        			<code>from,to,session_id,timestamp</code>: 
+        			The simple format, extended with a identifier for each user session and a time when the action was made. A session is defined as all the actions a user made from opening the application until closing it. This allows us to introduce a start- and exit- state in the markov chain. Moreover, sequence clustering and simulations of user actions are also possible. An example is the following snippet:
+<pre>from,to,session_id,timestamp
+A,B,1,01/01/2018 15:00
+B,C,1,01/01/2018 15:02
+C,D,1,01/01/2018 15:03
+A,C,3,01/01/2018 16:00
+B,C,2,01/01/2018 17:05
+A,B,2,01/01/2018 17:00</pre>
+        		</li>
+        		<li><strong>COMING UP: upload your own transition matrix</strong></li>
+        		<!--<li><code>from,to,user_id,timestamp</code>: When this format is used, we heuristically determine the session_ids by looking at the difference in timestamps of two consecutive actions, made by a user.</li>-->
         	</ul>
+
+        	<p style='margin-top: 50px;'> <strong> There is one special case which cannot be defined through this format: namely the sessions with only action. These can be defined by leaving <code>to</code> empty (<code>A,,4,01/01/2018 15:00</code>) </strong> </p> <br> 
+
+        	<p style='text-decoration: underline; margin-top: 10px;'> <strong> Everything you see is being performed client-side, this means that the uploaded data does never leave your computer! </strong> </p>
+
         </p>
       	<h3>Markov Chain Visualization</h3>
+
+      		Once you have uploaded your data to our platform successfully, the fun can start! We plan to support two main functionalities: (i) an intuitive markov chain visualization to study user behaviour and (ii) automatic clustering of user sessions. In the markov chain visualization, all nodes can be dragged around, so that you can define your own topology. Moreover, the slider on the right controls which edges are displayed (only edges with a probability higher or equal than the probability on the slider will be displayed). The different checkbox can be enabled or disabled in order to respectively turn on and off nodes in the chain and their corresponding edges. Finally, there is support for simulating user sessions. By clicking on the play button, a random walk will be made within the markov chain (with edges with higher probabilities having a higher chance of being taken in the walk) until an exit-state is reached. This random walk is displayed live in the markov chain (notice how a node will have a green thick border around it) and will be displayed beneath the play button after simulation.
+
       	<h3>User Session Clustering</h3>
+
+      		Coming real soon!
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
