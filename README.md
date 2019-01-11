@@ -4,4 +4,4 @@ This repository contains an updated version of the code in order to reproduce th
 
 In order to try out the demo, download an example file (such as the [start2cycle data](start2cycle.csv)) and go to [the demo website](https://ibcnservices.github.io/MCAppAnalysis/)
 
-![Screenshots of the application][mc_app_screenshots.png]
+![Screenshots of the application](mc_app_screenshots.png)
