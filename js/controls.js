@@ -35,12 +35,14 @@ function arraysEqual(arr1, arr2) {
 
 function clusterSessions(sessions, states, nrClusters){
 
-  var sortedSessions  = sessions.slice(0).sort(sortByLength),
-      // Discard outliers in terms of session length
-      minLength = sortedSessions[parseInt(0.05*sessions.length)].length, 
-      maxLength = sortedSessions[parseInt(0.95*sessions.length)].length;
+  Math.seedrandom('2018');
 
-  sessions = sessions.filter(x => x.length > minLength && x.length < maxLength);
+  var sortedSessions  = sessions.sort(sortByLength),
+      // Discard outliers in terms of session length
+      minLength = 4,//sortedSessions[parseInt(0.1*sessions.length)].length,
+      maxLength = 12;
+
+  sessions = sessions.filter(x => x.length >= minLength && x.length <= maxLength);
 
   if(nrClusters == 1) return [sessions];
 
@@ -198,6 +200,7 @@ class MarkovChain {
     constructor(states) {
         this.countMatrix = zeros([states.length, states.length]);
         this.states = states;
+        this.initialProbs = zeros([states.length]);
 
         this.state_to_id = {};
         this.id_to_state = {};
@@ -210,6 +213,7 @@ class MarkovChain {
     }
 
     add_session(session){
+      this.initialProbs[this.state_to_id[session[0]]]++;
       for(var i = 0; i < session.length - 1; i++){
         this.countMatrix[this.state_to_id[session[i]]][this.state_to_id[session[i + 1]]]++;
       }
@@ -249,9 +253,31 @@ class MarkovChain {
         this.state = this.id_to_state[weightedList[randIdx]];
     }
 
+    transitionUnLoaded(){
+        var weightedList     = [],
+            transitionMatrix = this.get_transition_matrix(),
+            randIdx;
+
+        for (var i = 0; i < this.states.length; i++) {
+          if(transitionMatrix[this.state_to_id[this.state]][i]){
+            for(var j = 0; j < transitionMatrix[this.state_to_id[this.state]][i]*1000; j++){
+              weightedList.push(i);
+            }
+          }
+        }
+
+        randIdx = Math.floor(Math.random() * weightedList.length);
+        this.state = this.id_to_state[weightedList[randIdx]];
+    }
+
     get_probability(session){
-      var transitionMatrix = this.get_transition_matrix(),
-          prob = 1.0;
+      var transitionMatrix = this.get_transition_matrix();
+
+      if(session[0] == 'start'){
+        var prob = 1.0;
+      } else {
+        var prob = this.initialProbs[this.state_to_id[session[0]]] / this.initialProbs.reduce((a, b) => a + b, 0);
+      }
       for(var i = 0; i < session.length - 1; i++){
         prob *= transitionMatrix[this.state_to_id[session[i]]][this.state_to_id[session[i + 1]]];
       }
