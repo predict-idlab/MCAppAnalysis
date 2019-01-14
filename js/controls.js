@@ -33,6 +33,10 @@ function arraysEqual(arr1, arr2) {
     return true;
 }
 
+function isInArray(value, array) {
+  return array.indexOf(value) > -1;
+}
+
 function clusterSessions(sessions, states, nrClusters){
 
   Math.seedrandom('2018');
