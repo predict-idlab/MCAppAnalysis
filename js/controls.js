@@ -39,8 +39,20 @@ function clusterSessions(sessions, states, nrClusters){
 
   var sortedSessions  = sessions.sort(sortByLength),
       // Discard outliers in terms of session length
-      minLength = 4,//sortedSessions[parseInt(0.1*sessions.length)].length,
+      minLength = 2,//sortedSessions[parseInt(0.1*sessions.length)].length,
       maxLength = 12;
+
+  var filteredSessions = [];
+  for(var i = 0; i < sessions.length; i++){
+    var filteredSession = [];
+    for(var a = 1; a < sessions[i].length - 1; a++){
+      if(!isInArray(sessions[i][a], ["badges", "bugreport", "personal"])){
+        filteredSession.push(sessions[i][a]);
+      }
+    }
+    filteredSessions.push(filteredSession);
+  }
+  sessions = filteredSessions;
 
   sessions = sessions.filter(x => x.length >= minLength && x.length <= maxLength);
 
