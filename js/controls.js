@@ -240,6 +240,17 @@ class MarkovChain {
         this.state = this.id_to_state[0];
     }
 
+    initial_state(){
+      var weightedList     = [];
+      for (var i = 0; i < this.initialProbs.length; i++) {
+        for(var j = 0; j < this.initialProbs[i]*1000; j++){
+          weightedList.push(i);
+        }
+      }
+      var randIdx = Math.floor(Math.random() * weightedList.length)
+      this.state = this.id_to_state[weightedList[randIdx]];
+    }
+
     add_session(session){
       this.initialProbs[this.state_to_id[session[0]]]++;
       for(var i = 0; i < session.length - 1; i++){
@@ -329,6 +340,8 @@ function createSequenceMatrix(sessions, cmap, svgId){
 
   var svg = d3.select(svgId),
       height = +svg.attr('height');
+
+  svg.selectAll("*").remove();
 
 
   if(svgId == '#simulatedSequence'){
@@ -741,6 +754,7 @@ var visualizeData = function(theFile) {
     // Keep calling simulate with a new timeout variable
     var simulatedSession = []
     function simulate(){
+        console.log(mc.state);
         simulateThread = window.setTimeout(function(){
             simulatedSession.push(mc.state);
             $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
@@ -761,7 +775,7 @@ var visualizeData = function(theFile) {
 
     $('#btnStartSimulation').click(function () {
       if(simulateThread == null){
-        mc.state = "start";
+        mc.initial_state();
         $('#circle_' + mc.states[mc.state_to_id[mc.state]]).addClass('current-node');
         simulate();
       }
@@ -5188,6 +5202,7 @@ var demo = function(){
     // Keep calling simulate with a new timeout variable
     var simulatedSession = []
     function simulate(){
+      console.log(mc.state);
         simulateThread = window.setTimeout(function(){
             simulatedSession.push(mc.state);
             $('#circle_' + mc.states[mc.state_to_id[mc.state]]).removeClass('current-node');
@@ -5208,7 +5223,7 @@ var demo = function(){
 
     $('#btnStartSimulation').click(function () {
       if(simulateThread == null){
-        mc.state = "start";
+        mc.initial_state();
         $('#circle_' + mc.states[mc.state_to_id[mc.state]]).addClass('current-node');
         simulate();
       }
