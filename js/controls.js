@@ -704,7 +704,7 @@ function CSVToArray( strData, strDelimiter ){
 
 var visualizeData = function(theFile) {
   return function(e) {
-    data = $.csv.toArrays(target.result);//CSVToArray(e.target.result, ',');
+    data = $.csv.toArrays(e.target.result);//CSVToArray(e.target.result, ',');
 
     if(data[0].length != 2 && data[0].length != 4){
       alert('The uploaded file should contain either two or four columns!');
